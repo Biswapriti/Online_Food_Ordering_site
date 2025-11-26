@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momo Delights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="description" content="Momo Delights - handcrafted momos, fresh ingredients, quick service.">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="/">
+                <h1>Momo Delights</h1>
+            </a>
+
+            <button id="nav-toggle" aria-expanded="false" aria-controls="site-navigation" class="nav-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Theme toggle -->
+            <button id="theme-toggle" class="nav-toggle" aria-pressed="false" title="Toggle theme">
+                <span class="sr-only">Toggle dark theme</span>
+                <i class="fas fa-moon"></i>
+            </button>
+            <nav id="site-navigation" class="site-nav" role="navigation">
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li>
+                        <a href="/cart" class="cart-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </li>
+                    {% if session.username %}
+                    <li class="nav-profile"><a href="/profile"><i class="fas fa-user-circle"></i> {{ session.username }}</a></li>
+                    <li><a href="/logout">Logout</a></li>
+                    {% else %}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register" class="btn-outline">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="container hero-inner">
+                <div class="hero-text">
+                    <h2>Handcrafted Momos, Made with Love</h2>
+                    <p>Discover steamed, fried, and specialty momos crafted from fresh ingredients and authentic recipes.</p>
+                    <div class="hero-actions">
+                        <a class="btn" href="#menu">See Menu</a>
+                        {% if session.username %}
+                        <a class="btn btn-light" href="/checkout">Order Now</a>
+                        {% else %}
+                        <a class="btn btn-light" href="/register_prompt">Order Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="hero-image" aria-hidden="true">
+                    <!-- Decorative image placeholder; replace with an image in static/ for production -->
+                    <img class="hero-img" src="{{ cloud_image('front_pic.png') }}" alt="Plate of momos" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'200\'><text x=\'10\' y=\'100\' font-size=\'48\'>🥟</text></svg>'">
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="description">
+                    <h2>Why choose Momo Delights?</h2>
+                    <hr>
+                </div>
+                <div class="features-grid">
+                    <article class="feature">
+                        <i class="fas fa-utensils feature-icon" aria-hidden="true"></i>
+                        <h3>Authentic Recipes</h3>
+                        <p>Family recipes passed down through generations for a true momo experience.</p>
+                    </article>
+                    <article class="feature">
+                        <i class="fas fa-seedling feature-icon" aria-hidden="true"></i>
+                        <h3>Fresh Ingredients</h3>
+                        <p>We source local produce daily to keep each bite fresh and flavorful.</p>
+                    </article>
+                    <article class="feature">
+                        <i class="fas fa-stopwatch feature-icon" aria-hidden="true"></i>
+                        <h3>Quick Service</h3>
+                        <p>Fast, friendly service whether you dine in, take away, or order online.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="menu" class="menu">
+            <div class="container">
+                <div class="heading">
+                    <h2>Our Menu</h2>
+                    <hr>
+                    <p>Handcrafted varieties to suit every taste.</p>
+                </div>
+
+                
+
+                <div class="menu-grid">
+                    <!-- Show a curated selection on the homepage (first 6 items) -->
+                    <div class="menu-item" data-type="veg paneer">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=500&auto=format" alt="Steamed Veg Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Steamed Veg Momos</h3>
+                            <p>Classic steamed momos with mixed vegetables and herbs.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹120</span>
+                                <button class="btn-cart go-cart" data-id="steamed-veg" data-price="120" data-redirect="true">Add to Cart <i class="fas fa-cart-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" data-type="veg paneer">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1609167830220-7164aa360951?w=500&auto=format" alt="Paneer Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Paneer Momos</h3>
+                            <p>Stuffed with spiced paneer and fresh herbs.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹160</span>
+                                <button class="btn-cart go-cart" data-id="paneer" data-price="160" data-redirect="true">Add to Cart <i class="fas fa-cart-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" data-type="veg special">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?w=500&auto=format" alt="Cheese Corn Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Cheese Corn Momos</h3>
+                            <p>Creamy cheese and sweet corn filling.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹170</span>
+                                <button class="btn-cart go-cart" data-id="cheese-corn" data-price="170" data-redirect="true">Add to Cart <i class="fas fa-cart-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" data-type="nonveg chicken">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format" alt="Classic Chicken Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Classic Chicken Momos</h3>
+                            <p>Juicy minced chicken with aromatic spices.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹180</span>
+                                <button class="btn-cart go-cart" data-id="chicken" data-price="180" data-redirect="true">Add to Cart <i class="fas fa-cart-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" data-type="nonveg chicken special">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=500&auto=format" alt="Butter Chicken Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Butter Chicken Momos</h3>
+                            <p>Rich butter chicken filling with creamy sauce.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹220</span>
+                                <button class="btn-cart go-cart" data-id="butter-chicken" data-price="220" data-redirect="true">Add to Cart <i class="fas fa-cart-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" data-type="special">
+                        <div class="menu-item-image">
+                            <img src="https://images.unsplash.com/photo-1630409351241-e90e7f5e434d?w=500&auto=format" alt="Tandoori Momos" loading="lazy">
+                        </div>
+                        <div class="menu-item-content">
+                            <h3>Tandoori Momos</h3>
+                            <p>Grilled momos with smoky tandoori marinade.</p>
+                            <div class="menu-item-footer">
+                                <span class="price">₹200</span>
+                                <a class="btn" href="/menu">See Full Menu</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about" id="about">
+            <div class="container">
+                <div class="about-inner">
+                    <div class="about-text">
+                        <h2>Our Story</h2>
+                        <p>At Momo Delights, every momo is crafted with care. We combine traditional techniques with high-quality
+                            ingredients to deliver consistent flavor and texture.</p>
+                        <ul class="check-list">
+                            <li>Authentic Recipes</li>
+                            <li>Fresh Ingredients</li>
+                            <li>Quick Service</li>
+                            <li>Cozy Ambiance</li>
+                        </ul>
+                    </div>
+                    <aside class="about-info">
+                        <h3>Visit Us</h3>
+                        <p>K4/LIG-57, Kalinga Vihar, Bhubaneswar, Odisha</p>
+                        <p>Mon-Fri: 10:00 - 22:00 • Sat-Sun: 11:00 - 23:00</p>
+                        <p>Phone: 7815064177</p>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <section class="testimonials">
+            <div class="container">
+                <div class="description">
+                    <h2>What our customers say</h2>
+                    <hr>
+                </div>
+                <div class="testimonials-slider" id="testimonials">
+                    <blockquote class="testimonial">"The momos here are absolutely delicious! I come here at least once a week."<footer>— John</footer></blockquote>
+                    <blockquote class="testimonial">"The chicken momos are juicy and full of flavor."<footer>— Jane</footer></blockquote>
+                    <blockquote class="testimonial">"Great variety and consistent taste every time."<footer>— Emily</footer></blockquote>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="form-info">
+            <div class="container">
+                <div class="cont">
+                    <h2>Contact Us</h2>
+                    <hr>
+                    <p>Have questions or feedback? We'd love to hear from you!</p>
+                </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="margin-bottom:24px">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="contact-grid">
+                <form class="contact-form" action="{{ url_for('contact_submit') }}" method="post">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required>
+
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+
+                    <button class="btn" type="submit">Send Message</button>
+                </form>
+
+                <div class="contact-info aside">
+                    <h3>Find Us</h3>
+                    <p><i class="fas fa-location-dot"></i> K4/LIG-57, Kalinga Vihar, Bhubaneswar, Odisha</p>
+                    <p><i class="fas fa-phone"></i> <a href="tel:+917815064177">7815064177</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:biswapritij15@gmail.com">biswapritij15@gmail.com</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; {{ current_year if current_year is defined else 2023 }} Momo Delights</p>
+            <nav class="footer-nav">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

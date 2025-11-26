@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Profile - Momo Delights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark-theme">
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="/">
+            <h1>Momo Delights</h1>
+        </a>
+        <nav class="site-nav">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/menu">Menu</a></li>
+                <li><a href="/cart">Cart</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<main class="cart-main">
+    <div class="container cart-wrap">
+        <h1 class="profile-title">My Profile</h1>
+        {% if user %}
+        <div class="profile-grid">
+            <aside class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="avatar">{{ user.username[:1]|upper }}</div>
+                    <div class="profile-info">
+                        <h3>{{ user.username }}</h3>
+                        <p class="muted">{{ user.email or '—' }}</p>
+                        <p class="muted">Member since: {{ user.created_at }}</p>
+                    </div>
+                </div>
+
+                <nav class="profile-nav">
+                    <ul>
+                        <li class="active">Account</li>
+                        <li><a href="#orders">Orders</a></li>
+                        <li><a href="#addresses">Addresses</a></li>
+                        <li><a href="/logout">Logout</a></li>
+                    </ul>
+                </nav>
+
+                <div class="address-card">
+                    <h4>Default delivery address</h4>
+                    {% if saved_address %}
+                        <div class="address-box"><pre style="white-space:pre-wrap">{{ saved_address }}</pre></div>
+                        <a class="btn-link" href="#addresses">Change</a>
+                    {% else %}
+                        <p class="muted">No saved address</p>
+                        <a class="btn" href="#addresses">Add address</a>
+                    {% endif %}
+                </div>
+            </aside>
+
+            <section class="profile-content">
+                <div id="orders" class="card">
+                    <div class="card-header"><h2>Recent Orders</h2></div>
+                    <div class="card-body">
+                    {% if orders and orders|length > 0 %}
+                        <ul class="orders-list">
+                        {% for o in orders %}
+                            <li class="order-item">
+                                <div class="order-row">
+                                    <div>
+                                        <strong>Order #{{ o.order_id }}</strong>
+                                        <div class="muted">Placed: {{ o.created_at }}</div>
+                                    </div>
+                                    <div class="order-total">₹{{ o.total }}</div>
+                                </div>
+                                <div class="order-items small">
+                                    {% for it in o['items'] %}
+                                        <span class="pill">{{ it.name if it.name is defined else it }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="order-address small muted">{{ o.address }}</div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted">No past orders found. Your completed orders will appear here.</p>
+                    {% endif %}
+                    </div>
+                </div>
+
+                <div id="addresses" class="card" style="margin-top:18px;">
+                    <div class="card-header"><h2>Manage Addresses</h2></div>
+                    <div class="card-body">
+                        <form method="post" action="{{ url_for('save_profile_address') }}" class="address-form-grid">
+                            <div class="form-row">
+                                <label>Address Line 1</label>
+                                <input name="line1" required />
+                            </div>
+                            <div class="form-row">
+                                <label>Address Line 2</label>
+                                <input name="line2" />
+                            </div>
+                            <div class="form-row">
+                                <label>City</label>
+                                <input name="city" required />
+                            </div>
+                            <div class="form-row">
+                                <label>State</label>
+                                <input name="state" />
+                            </div>
+                            <div class="form-row">
+                                <label>ZIP / Postal Code</label>
+                                <input name="zipcode" />
+                            </div>
+                            <div class="form-row">
+                                <label>Phone</label>
+                                <input name="phone" required />
+                            </div>
+                            <div style="margin-top:12px;">
+                                <button class="btn" type="submit">Save Address</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {% else %}
+        <p>User not found.</p>
+        {% endif %}
+    </div>
+</main>
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <p>&copy; {{ current_year if current_year is defined else 2025 }} Momo Delights</p>
+    </div>
+</footer>
+</body>
+</html>
