@@ -1,28 +1,19 @@
 [build]
-  command = "pip install -r requirements.txt"
-  functions = ".netlify/functions"
-  publish = "static"
+  command = "cd momo && pip install -r requirements.txt && cd .."
+  functions = "momo/.netlify/functions"
+  publish = "momo/static"
 
 [build.environment]
   PYTHON_VERSION = "3.11"
 
 [context.production]
-  command = "pip install -r requirements.txt"
-
-[context.production.environment]
-  PYTHON_VERSION = "3.11"
+  command = "cd momo && pip install -r requirements.txt && cd .."
 
 [context.deploy-preview]
-  command = "pip install -r requirements.txt"
-
-[context.deploy-preview.environment]
-  PYTHON_VERSION = "3.11"
+  command = "cd momo && pip install -r requirements.txt && cd .."
 
 [context.branch-deploy]
-  command = "pip install -r requirements.txt"
-
-[context.branch-deploy.environment]
-  PYTHON_VERSION = "3.11"
+  command = "cd momo && pip install -r requirements.txt && cd .."
 
 # Redirects for Flask backend API calls
 [[redirects]]
