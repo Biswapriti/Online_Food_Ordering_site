@@ -13,10 +13,9 @@ CORS(app)
 # Load environment variables
 load_dotenv()
 
-# Use environment variables (REQUIRED for security)
-app.secret_key = os.getenv('SECRET_KEY')
-if not app.secret_key:
-    raise ValueError("ERROR: SECRET_KEY environment variable is required")
+# Use environment variables with fallback for development
+# Production (Render) should set SECRET_KEY via environment variables
+app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key-change-in-production')
 
 # Database connection (use environment variables)
 def get_db_connection():
@@ -27,13 +26,19 @@ def get_db_connection():
         'database': os.getenv('DB_NAME'),
         'port': int(os.getenv('DB_PORT', '3306'))
     }
-    # Validate all required DB variables are set
+    # Warn if required DB variables are missing
     for key, val in db_config.items():
-        if key != 'port' and val is None:
-            raise ValueError(f"ERROR: {key.upper()} environment variable is required for database connection")
+        if key != 'port' and not val:
+            print(f"WARNING: {key.upper()} environment variable not set")
     return mysql.connector.connect(**db_config)
 
-conn = get_db_connection()
+# Attempt DB connection on startup; if it fails, app can still start
+try:
+    conn = get_db_connection()
+except Exception as e:
+    print(f"WARNING: Database connection failed on startup: {e}")
+    print("App will start but database-dependent routes will fail until DB is available.")
+    conn = None
 
 # Load local .env (if present) so CLOUDINARY_* variables are available
 basedir = os.path.dirname(__file__)
