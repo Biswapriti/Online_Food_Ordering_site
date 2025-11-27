@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Checkout - Momo Delights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='cart.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="dark-theme">
+<header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="/">
+                <h1>Momo Delights</h1>
+            </a>
+
+            <button id="nav-toggle" aria-expanded="false" aria-controls="site-navigation" class="nav-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Theme toggle -->
+            <button id="theme-toggle" class="nav-toggle" aria-pressed="false" title="Toggle theme">
+                <span class="sr-only">Toggle dark theme</span>
+                <i class="fas fa-moon"></i>
+            </button>
+            <nav id="site-navigation" class="site-nav" role="navigation">
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li>
+                        <a href="/cart" class="cart-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </li>
+                    {% if session.username %}
+                    <li class="nav-profile"><a href="/profile"><i class="fas fa-user-circle"></i> {{ session.username }}</a></li>
+                    <li><a href="/logout">Logout</a></li>
+                    {% else %}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register" class="btn-outline">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    
+    <main class="cart-main">
+        <div class="container cart-wrap">
+            <h1 style="text-align:center; margin-bottom:45px;">Checkout</h1>
+            <div class="cart-layout">
+                <section class="checkout-form">
+                    <form method="post">
+                        <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.04);">
+                            <h2 style="margin-bottom:12px;">Shipping details</h2>
+
+                            <label for="name">Full name</label>
+                            <input id="name" name="name" required type="text" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6;margin:8px 0 12px;">
+
+                            <label for="email">Email</label>
+                            <input id="email" name="email" required type="email" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6;margin:8px 0 12px;">
+
+                            <label for="address">Delivery address</label>
+                            <textarea id="address" name="address" required rows="4" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6;margin:8px 0 12px;"></textarea>
+
+                            <h3 style="margin-top:18px;">Payment</h3>
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block;margin-bottom:6px;"><input type="radio" name="payment" value="cod" checked> Cash on delivery</label>
+                                <label style="display:block;margin-bottom:6px;"><input type="radio" name="payment" value="card"> Card (mock)</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-checkout" style="width:100%">Place order</button>
+                        </div>
+                    </form>
+                </section>
+
+                <aside class="cart-summary">
+                    <h3 style="margin-top:0;">Order summary</h3>
+                    <div style="margin:12px 0;">
+                        {% if cart_items %}
+                        <ul style="list-style:none;padding:0;margin:0 0 12px;">
+                            {% for item in cart_items %}
+                            <li style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eee;">
+                                <span>{{ item.name }} × {{ item.quantity }}</span>
+                                <strong>₹{{ "%.2f"|format(item.price * item.quantity) }}</strong>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-cart">Your cart is empty</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="subtotal-row"><span>Subtotal</span><span>₹{{ "%.2f"|format(subtotal) }}</span></div>
+                    <div class="delivery-row"><span>Delivery</span><span>₹{{ "%.2f"|format(delivery_fee) }}</span></div>
+                    <div class="total-row"><span>Total</span><span>₹{{ "%.2f"|format(total) }}</span></div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; {{ current_year if current_year is defined else 2025 }} Momo Delights</p>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
