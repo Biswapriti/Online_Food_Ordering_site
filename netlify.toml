@@ -1,0 +1,37 @@
+[build]
+  command = "pip install -r requirements.txt"
+  functions = ".netlify/functions"
+  publish = "static"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[context.production]
+  command = "pip install -r requirements.txt"
+
+[context.production.environment]
+  PYTHON_VERSION = "3.11"
+
+[context.deploy-preview]
+  command = "pip install -r requirements.txt"
+
+[context.deploy-preview.environment]
+  PYTHON_VERSION = "3.11"
+
+[context.branch-deploy]
+  command = "pip install -r requirements.txt"
+
+[context.branch-deploy.environment]
+  PYTHON_VERSION = "3.11"
+
+# Redirects for Flask backend API calls
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Redirect all routes to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
