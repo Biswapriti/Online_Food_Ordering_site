@@ -40,14 +40,21 @@ except Exception as e:
     print("App will start but database-dependent routes will fail until DB is available.")
     conn = None
 
-# Load local .env (if present) so CLOUDINARY_* variables are available
-basedir = os.path.dirname(__file__)
-dotenv_path = os.path.join(basedir, '.env')
-load_dotenv(dotenv_path)
-
 
 def get_db_cursor(buffered=False):
-    return conn.cursor(buffered=buffered)
+    """Get a fresh database cursor, creating a new connection if needed."""
+    global conn
+    try:
+        # Try to use existing connection
+        if conn is not None:
+            return conn.cursor(buffered=buffered)
+        else:
+            # Create a new connection if the global one is None
+            conn = get_db_connection()
+            return conn.cursor(buffered=buffered)
+    except Exception as e:
+        print(f"ERROR: Failed to get database cursor: {e}")
+        raise
 
 # Load Cloudinary mapping if present (created by the upload script)
 _CLOUD_MAP_PATH = os.path.join(os.path.dirname(__file__), 'static', 'cloudinary_map.json')
@@ -98,36 +105,40 @@ def login():
         return redirect(url_for('profile'))
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
 
-        cur = get_db_cursor()
-        cur.execute("SELECT user_id, username, password FROM users WHERE username = %s", (username,))
-        row = cur.fetchone()
+            cur = get_db_cursor()
+            cur.execute("SELECT user_id, username, password FROM users WHERE username = %s", (username,))
+            row = cur.fetchone()
 
-        if row:
-            user_id, uname, stored = row[0], row[1], row[2]
-            # Try password hash verification first
-            if check_password_hash(stored, password):
-                session['user_id'] = user_id
-                session['username'] = uname
-                flash('Logged in successfully', 'success')
-                return redirect(url_for('index'))
-            else:
-                # Handle legacy plaintext password: if store equals provided password,
-                # upgrade to hashed password transparently and log user in.
-                if stored == password:
-                    new_hash = generate_password_hash(password)
-                    upd = get_db_cursor()
-                    upd.execute("UPDATE users SET password = %s WHERE user_id = %s", (new_hash, user_id))
-                    conn.commit()
+            if row:
+                user_id, uname, stored = row[0], row[1], row[2]
+                # Try password hash verification first
+                if check_password_hash(stored, password):
                     session['user_id'] = user_id
                     session['username'] = uname
-                    flash('Logged in and password upgraded to secure storage', 'success')
+                    flash('Logged in successfully', 'success')
                     return redirect(url_for('index'))
+                else:
+                    # Handle legacy plaintext password: if store equals provided password,
+                    # upgrade to hashed password transparently and log user in.
+                    if stored == password:
+                        new_hash = generate_password_hash(password)
+                        upd = get_db_cursor()
+                        upd.execute("UPDATE users SET password = %s WHERE user_id = %s", (new_hash, user_id))
+                        conn.commit()
+                        session['user_id'] = user_id
+                        session['username'] = uname
+                        flash('Logged in and password upgraded to secure storage', 'success')
+                        return redirect(url_for('index'))
+                    flash('Invalid username or password', 'danger')
+            else:
                 flash('Invalid username or password', 'danger')
-        else:
-            flash('Invalid username or password', 'danger')
+        except Exception as e:
+            print(f"ERROR in login route: {e}")
+            flash('Database error: unable to process login. Please try again later.', 'danger')
 
     return render_template('login.html')
 
@@ -140,26 +151,31 @@ def register():
         return redirect(url_for('profile'))
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        email = request.form.get('email')
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            email = request.form.get('email')
 
-        if not username or not password:
-            flash('Username and password are required', 'warning')
+            if not username or not password:
+                flash('Username and password are required', 'warning')
+                return render_template('register.html')
+
+            cur = get_db_cursor()
+            cur.execute("SELECT user_id FROM users WHERE username = %s OR email = %s", (username, email))
+            if cur.fetchone():
+                flash('Username or email already exists', 'warning')
+                return render_template('register.html')
+
+            hashed = generate_password_hash(password)
+            ins = get_db_cursor()
+            ins.execute("INSERT INTO users (username, password, email) VALUES (%s, %s, %s)", (username, hashed, email))
+            conn.commit()
+            flash('Registration successful. Please log in.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            print(f"ERROR in register route: {e}")
+            flash('Database error: unable to process registration. Please try again later.', 'danger')
             return render_template('register.html')
-
-        cur = get_db_cursor()
-        cur.execute("SELECT user_id FROM users WHERE username = %s OR email = %s", (username, email))
-        if cur.fetchone():
-            flash('Username or email already exists', 'warning')
-            return render_template('register.html')
-
-        hashed = generate_password_hash(password)
-        ins = get_db_cursor()
-        ins.execute("INSERT INTO users (username, password, email) VALUES (%s, %s, %s)", (username, hashed, email))
-        conn.commit()
-        flash('Registration successful. Please log in.', 'success')
-        return redirect(url_for('login'))
 
     return render_template('register.html')
 
