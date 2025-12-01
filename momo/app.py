@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import os
 import json
+import time
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -71,7 +72,24 @@ def get_db_connection():
                 print(f"WARNING: {key.upper()} environment variable not set")
         print(f"[DB] Connecting via individual env vars to {db_config['host']}:{db_config['port']}/{db_config['database']}")
     
-    return mysql.connector.connect(**db_config)
+    # Try to connect with a small retry/backoff loop to handle transient startup delays
+    attempts = 0
+    max_attempts = int(os.getenv('DB_CONNECT_RETRIES', '5'))
+    backoff = float(os.getenv('DB_CONNECT_BACKOFF', '1.0'))
+    last_exc = None
+    while attempts < max_attempts:
+        try:
+            # Use a short connection timeout to fail fast when unreachable
+            return mysql.connector.connect(connect_timeout=5, **db_config)
+        except Exception as e:
+            last_exc = e
+            attempts += 1
+            print(f"[DB] Connection attempt {attempts}/{max_attempts} failed: {e}")
+            time.sleep(backoff * attempts)
+
+    # All attempts failed; raise the last exception to be handled by caller
+    print(f"ERROR: Unable to establish DB connection after {max_attempts} attempts: {last_exc}")
+    raise last_exc
 
 # Attempt DB connection on startup; if it fails, app can still start
 try:
@@ -86,13 +104,13 @@ def get_db_cursor(buffered=False):
     """Get a fresh database cursor, creating a new connection if needed."""
     global conn
     try:
-        # Try to use existing connection
-        if conn is not None:
+        # Use existing connection if it's alive
+        if conn is not None and getattr(conn, 'is_connected', lambda: True)():
             return conn.cursor(buffered=buffered)
-        else:
-            # Create a new connection if the global one is None
-            conn = get_db_connection()
-            return conn.cursor(buffered=buffered)
+
+        # Otherwise attempt to create a fresh connection
+        conn = get_db_connection()
+        return conn.cursor(buffered=buffered)
     except Exception as e:
         print(f"ERROR: Failed to get database cursor: {e}")
         raise
