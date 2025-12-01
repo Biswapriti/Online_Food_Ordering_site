@@ -17,19 +17,60 @@ load_dotenv()
 # Production (Render) should set SECRET_KEY via environment variables
 app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key-change-in-production')
 
-# Database connection (use environment variables)
+# Database connection (use environment variables or DATABASE_URL)
 def get_db_connection():
-    db_config = {
-        'host': os.getenv('DB_HOST'),
-        'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'database': os.getenv('DB_NAME'),
-        'port': int(os.getenv('DB_PORT', '3306'))
-    }
-    # Warn if required DB variables are missing
-    for key, val in db_config.items():
-        if key != 'port' and not val:
-            print(f"WARNING: {key.upper()} environment variable not set")
+    """
+    Connect to MySQL using either:
+    1. DATABASE_URL (Railway format: mysql://user:password@host:port/database)
+    2. Individual env vars: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT
+    """
+    database_url = os.getenv('DATABASE_URL')
+    
+    if database_url:
+        # Parse DATABASE_URL (mysql://user:password@host:port/database)
+        try:
+            # Remove 'mysql://' prefix
+            url = database_url.replace('mysql://', '')
+            
+            # Split credentials and host
+            creds, host_db = url.split('@', 1)
+            user, password = creds.split(':', 1)
+            
+            # Split host and database
+            host_port, database = host_db.rsplit('/', 1)
+            if ':' in host_port:
+                host, port = host_port.rsplit(':', 1)
+                port = int(port)
+            else:
+                host = host_port
+                port = 3306
+            
+            db_config = {
+                'host': host,
+                'user': user,
+                'password': password,
+                'database': database,
+                'port': port
+            }
+            print(f"[DB] Connecting via DATABASE_URL to {host}:{port}/{database}")
+        except Exception as e:
+            print(f"ERROR: Failed to parse DATABASE_URL: {e}")
+            raise
+    else:
+        # Fall back to individual environment variables
+        db_config = {
+            'host': os.getenv('DB_HOST'),
+            'user': os.getenv('DB_USER'),
+            'password': os.getenv('DB_PASSWORD'),
+            'database': os.getenv('DB_NAME'),
+            'port': int(os.getenv('DB_PORT', '3306'))
+        }
+        # Warn if required DB variables are missing
+        for key, val in db_config.items():
+            if key != 'port' and not val:
+                print(f"WARNING: {key.upper()} environment variable not set")
+        print(f"[DB] Connecting via individual env vars to {db_config['host']}:{db_config['port']}/{db_config['database']}")
+    
     return mysql.connector.connect(**db_config)
 
 # Attempt DB connection on startup; if it fails, app can still start
