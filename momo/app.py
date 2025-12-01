@@ -591,5 +591,65 @@ def contact_submit():
     return redirect(url_for('index') + '#contact')
 
 
+@app.route('/init-db', methods=['GET'])
+def init_db():
+    """
+    Initialize database schema (create tables if they don't exist).
+    Protected by INIT_DB environment variable (must be set to 'true').
+    Usage: Set INIT_DB=true in environment and visit /init-db once.
+    """
+    init_enabled = os.getenv('INIT_DB', '').lower() == 'true'
+    if not init_enabled:
+        return {'error': 'Database initialization is disabled. Set INIT_DB=true to enable.'}, 403
+    
+    try:
+        cur = get_db_cursor()
+        
+        # Create users table
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INT PRIMARY KEY AUTO_INCREMENT,
+                username VARCHAR(80) NOT NULL UNIQUE,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Create contacts table
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS contacts (
+                contact_id INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255),
+                email VARCHAR(255),
+                subject VARCHAR(255),
+                message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Create orders table
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS orders (
+                order_id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT,
+                items JSON,
+                total DECIMAL(10, 2),
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
+            )
+        ''')
+        
+        conn.commit()
+        return {
+            'status': 'success',
+            'message': 'Database schema initialized. Tables created: users, contacts, orders'
+        }, 200
+    except Exception as e:
+        print(f'ERROR in /init-db: {e}')
+        return {'status': 'error', 'message': str(e)}, 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
